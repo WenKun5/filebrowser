@@ -276,7 +276,7 @@ End:
 			}
 		}
 
-		i.Content = string(content)
+	//	i.Content = string(content)
 	}
 
 	return nil

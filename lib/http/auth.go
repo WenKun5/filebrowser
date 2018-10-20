@@ -87,13 +87,12 @@ func authHandler(c *fb.Context, w http.ResponseWriter, r *http.Request) (int, er
 	}
 
 	// Wenkun, Validate the token of user from cloud server and return JWT token.
-	if c.Auth.Method == "server" {
+	if c.Auth.Method != "none" {
 		ok, u := validateAuthByUserId(c, cred.Username)
 		if !ok {
 			return http.StatusForbidden, nil
 		}
 
-		// No need to check password
 		c.User = u
 		return printToken(c, w)
 	}
@@ -221,13 +220,16 @@ func MD5(text string) string {
 }
 
 func checkUserId(UserId string) bool {
-	cmd := exec.Command("uci get bindInfo.bind.UserId")
+	cmdstr := "uci get bindInfo.bind.UserId"
+	cmd := exec.Command("/bin/sh", "-c", cmdstr)
 	userId, err := cmd.Output()
 	if err != nil {
+		fmt.Println(err.Error())
 		return false
 	}
-
-	if string(userId) != UserId {
+	userIdStr := strings.Replace(string(userId), "\n", "", -1)
+	if userIdStr != UserId {
+		fmt.Printf("userId does not match, %s, %s", userIdStr, UserId)
 		return false
 	}
 	return true
@@ -241,17 +243,19 @@ func validateAuthByUserId(c *fb.Context, UserId string) (bool, *fb.User) {
 
 	// Check UserId
 	user, err := c.Store.Users.GetByUsername(UserId, c.NewFS)
-	if err != nil {
+	if err == nil {
 		return true, user
 	}
 
 	// Can not find userId in database, Create an DefaultUser in database
-	u := fb.User{}
+	var u fb.User
+	u = fb.DefaultUser
 	u.Username = UserId
 
 	// Hashes the password.
 	u.Password, err = fb.HashPassword(UserId)
 	if err != nil {
+		fmt.Println(err.Error())
 		return false, nil
 	}
 
@@ -264,6 +268,7 @@ func validateAuthByUserId(c *fb.Context, UserId string) (bool, *fb.User) {
 
 	// Saves the user to the database.
 	if err := c.Store.Users.Save(&u); err != nil {
+		fmt.Println(err.Error())
 		return false, nil
 	}
 

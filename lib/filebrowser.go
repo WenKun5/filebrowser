@@ -13,11 +13,12 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/crypto/bcrypt"
+
 	rice "github.com/GeertJohan/go.rice"
 	"github.com/hacdias/fileutils"
 	"github.com/mholt/caddy"
 	"github.com/robfig/cron"
-	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -38,7 +39,6 @@ var (
 	ErrWrongDataType      = errors.New("wrong data type")
 	ErrInvalidUpdateField = errors.New("invalid field to update")
 	ErrInvalidOption      = errors.New("invalid option")
-	ErrInvalidUserId      = errors.New("invalid userid")
 )
 
 // ReCaptcha settings.
@@ -135,7 +135,7 @@ type FSBuilder func(scope string) FileSystem
 func (m *FileBrowser) Setup() error {
 	// Creates a new File Browser instance with the Users
 	// map and Assets box.
-	m.Assets = rice.MustFindBox("../frontend/dist")
+	//m.Assets = rice.MustFindBox("../frontend/dist")
 	m.Cron = cron.New()
 
 	// Tries to get the encryption key from the database.
