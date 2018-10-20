@@ -1,6 +1,6 @@
-**In Q2 2018, this project was renamed from `filemanager` to `filebrowser`, a new GitHub organization was created and the main repo was moved from [hacdias/filemanager](https://github.com/hacdias/filemanager) to [filebrowser/filebrowser](https://github.com/filebrowser/filebrowser). Old refs will work, because permanent redirects are set up. However, we suggest every contributor to update the remote URLs in their local clones. See [Changing a remote's URL](https://help.github.com/articles/changing-a-remote-s-url/).**
+**In Q2 2018, this project was renamed from `filemanager` to `filebrowser`, a new GitHub organization was created and the main repo was moved from [hacdias/filemanager](https://github.com/hacdias/filemanager) to [WenKun5/filebrowser](https://github.com/WenKun5/filebrowser). Old refs will work, because permanent redirects are set up. However, we suggest every contributor to update the remote URLs in their local clones. See [Changing a remote's URL](https://help.github.com/articles/changing-a-remote-s-url/).**
 
-**Moreover, the previously unique repo was split into multiple pieces: frontend, logo, caddy... At the same time, the official docker image was changed to [`filebrowser/filebrowser`](https://hub.docker.com/r/filebrowser/filebrowser/). Users are encouraged to check their sources and update them accordingly.**
+**Moreover, the previously unique repo was split into multiple pieces: frontend, logo, caddy... At the same time, the official docker image was changed to [`WenKun5/filebrowser`](https://hub.docker.com/r/WenKun5/filebrowser/). Users are encouraged to check their sources and update them accordingly.**
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/filebrowser/logo/master/banner.png" width="550"/>
@@ -10,10 +10,10 @@
 
 # filebrowser
 
-[![Travis](https://img.shields.io/travis/com/filebrowser/filebrowser.svg?style=flat-square)](https://travis-ci.com/filebrowser/filebrowser)
-[![Go Report Card](https://goreportcard.com/badge/github.com/filebrowser/filebrowser?style=flat-square)](https://goreportcard.com/report/github.com/filebrowser/filebrowser)
-[![Documentation](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](http://godoc.org/github.com/filebrowser/filebrowser)
-[![Version](https://img.shields.io/github/release/filebrowser/filebrowser.svg?style=flat-square)](https://github.com/filebrowser/filebrowser/releases/latest)
+[![Travis](https://img.shields.io/travis/com/WenKun5/filebrowser.svg?style=flat-square)](https://travis-ci.com/WenKun5/filebrowser)
+[![Go Report Card](https://goreportcard.com/badge/github.com/WenKun5/filebrowser?style=flat-square)](https://goreportcard.com/report/github.com/WenKun5/filebrowser)
+[![Documentation](https://img.shields.io/badge/godoc-reference-blue.svg?style=flat-square)](http://godoc.org/github.com/WenKun5/filebrowser)
+[![Version](https://img.shields.io/github/release/WenKun5/filebrowser.svg?style=flat-square)](https://github.com/WenKun5/filebrowser/releases/latest)
 [![Chat IRC](https://img.shields.io/badge/freenode-%23filebrowser-blue.svg?style=flat-square)](http://webchat.freenode.net/?channels=%23filebrowser)
 
 filebrowser provides a file managing interface within a specified directory and it can be used to upload, delete, preview, rename and edit your files. It allows the creation of multiple users and each user can have its own directory. It can be used as a standalone app or as a middleware.

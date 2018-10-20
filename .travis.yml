@@ -10,7 +10,7 @@ addons:
 env:
   global:
   - USE_DOCKER="true"
-  - WDIR=/go/src/github.com/filebrowser/filebrowser
+  - WDIR=/go/src/github.com/WenKun5/filebrowser
 stages:
   - lint
   - test
@@ -27,10 +27,10 @@ jobs:
     deploy:
       provider: script
       skip_cleanup: true
-      script: docker build -t filebrowser/filebrowser . && ./build/docker_login.sh && docker push filebrowser/filebrowser && docker logout
+      script: docker build -t WenKun5/filebrowser . && ./build/docker_login.sh && docker push WenKun5/filebrowser && docker logout
       on:
         tags: false
-        repo: filebrowser/filebrowser
+        repo: WenKun5/filebrowser
         branch: master
   - stage: release
     script:
@@ -46,6 +46,6 @@ jobs:
       file: "dist/*.*"
       file_glob: true
       on:
-        repo: filebrowser/filebrowser
+        repo: WenKun5/filebrowser
         all_branches: true
         tags: true

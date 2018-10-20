@@ -50,7 +50,7 @@ dockers:
     goos: linux
     goarch: amd64
     goarm: ''
-    image: filebrowser/filebrowser
+    image: WenKun5/filebrowser
     skip_push: true
     tag_templates:
       - "{{ .Tag }}"

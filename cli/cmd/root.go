@@ -4,7 +4,7 @@ import (
 	"log"
 	"strings"
 
-	fb "github.com/filebrowser/filebrowser/lib"
+	fb "github.com/WenKun5/filebrowser/lib"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	v "github.com/spf13/viper"

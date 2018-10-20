@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"reflect"
 
-	fb "github.com/filebrowser/filebrowser/lib"
+	fb "github.com/WenKun5/filebrowser/lib"
 	"github.com/mitchellh/mapstructure"
 )
 

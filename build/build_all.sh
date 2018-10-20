@@ -12,7 +12,7 @@ if [ "$USE_DOCKER" != "" ]; then
   fi;
 
   if [ "$WDIR" = "" ]; then
-    WDIR="/go/src/github.com/filebrowser/filebrowser"
+    WDIR="/go/src/github.com/WenKun5/filebrowser"
   fi;
 
   if [ "$(command -v git)" != "" ]; then

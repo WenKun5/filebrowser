@@ -4,13 +4,13 @@ wherever you are. To use this package as a middleware for your app,
 you'll need to import both File Browser and File Browser HTTP packages.
 
 	import (
-		fm "github.com/filebrowser/filebrowser"
-		h "github.com/filebrowser/filebrowser/http"
+		fm "github.com/WenKun5/filebrowser"
+		h "github.com/WenKun5/filebrowser/http"
 	)
 
 Then, you should create a new FileBrowser object with your options. In this
 case, I'm using BoltDB (via Storm package) as a Store. So, you'll also need
-to import "github.com/filebrowser/filebrowser/bolt".
+to import "github.com/WenKun5/filebrowser/bolt".
 
 	db, _ := storm.Open("bolt.db")
 
