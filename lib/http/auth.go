@@ -1,13 +1,20 @@
 package http
 
 import (
+	"bytes"
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
+	"os/exec"
+	"sort"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
 	fb "github.com/filebrowser/filebrowser/lib"
 )
@@ -77,6 +84,18 @@ func authHandler(c *fb.Context, w http.ResponseWriter, r *http.Request) (int, er
 	err := json.NewDecoder(r.Body).Decode(&cred)
 	if err != nil {
 		return http.StatusForbidden, err
+	}
+
+	// Wenkun, Validate the token of user from cloud server and return JWT token.
+	if c.Auth.Method == "server" {
+		ok, u := validateAuthByUserId(c, cred.Username)
+		if !ok {
+			return http.StatusForbidden, nil
+		}
+
+		// No need to check password
+		c.User = u
+		return printToken(c, w)
 	}
 
 	// If ReCaptcha is enabled, check the code.
@@ -173,6 +192,143 @@ func (e extractor) ExtractToken(r *http.Request) (string, error) {
 	}
 
 	return cookie.Value, nil
+}
+
+type imdosReq struct {
+	ReqId  string `json:"req_id"`
+	Time   string `json:"time_mills"`
+	Nonce  string `json:"nonce"`
+	MchId  string `json:"mch_id"`
+	Token  string `json:"token"`
+	Method string `json:"method"`
+	Data   string `json:"data"`
+	Sign   string `json:"sign"`
+}
+
+type UserId struct {
+	UserId string `json:"UserId"`
+}
+
+type imdosRsp struct {
+	Code string `json:"return_codes"`
+	Msg  string `json:"return_msg"`
+}
+
+func MD5(text string) string {
+	ctx := md5.New()
+	ctx.Write([]byte(text))
+	return hex.EncodeToString(ctx.Sum(nil))
+}
+
+func checkUserId(UserId string) bool {
+	cmd := exec.Command("uci get bindInfo.bind.UserId")
+	userId, err := cmd.Output()
+	if err != nil {
+		return false
+	}
+
+	if string(userId) != UserId {
+		return false
+	}
+	return true
+}
+
+func validateAuthByUserId(c *fb.Context, UserId string) (bool, *fb.User) {
+	ok := checkUserId(UserId)
+	if !ok {
+		return false, nil
+	}
+
+	// Check UserId
+	user, err := c.Store.Users.GetByUsername(UserId, c.NewFS)
+	if err != nil {
+		return true, user
+	}
+
+	// Can not find userId in database, Create an DefaultUser in database
+	u := fb.User{}
+	u.Username = UserId
+
+	// Hashes the password.
+	u.Password, err = fb.HashPassword(UserId)
+	if err != nil {
+		return false, nil
+	}
+
+	// The first user must be an administrator.
+	u.Admin = true
+	u.AllowCommands = true
+	u.AllowNew = true
+	u.AllowEdit = true
+	u.AllowPublish = true
+
+	// Saves the user to the database.
+	if err := c.Store.Users.Save(&u); err != nil {
+		return false, nil
+	}
+
+	return true, &u
+}
+
+// validateAuthFromCloud is use to validate the user authentication
+func validateAuthFromCloud(token string) (bool, string) {
+	var userId UserId
+	var reqData imdosReq
+	var strslice []string
+
+	reqId := "NQE1PiLi"
+	timeStamp := strconv.FormatInt(time.Now().UnixNano()/1e6, 10)
+	fmt.Println(timeStamp)
+	nonce := "H7SG5XW6"
+	mchId := "1"
+	method := "CheckToken"
+
+	imdosUrl := "http://app.ccipfs.cn/dake/interface.aspx"
+
+	userId.UserId = "wenkun"
+	data, errs := json.Marshal(userId)
+	if errs != nil {
+		fmt.Println(errs.Error())
+	}
+	strslice = append(strslice, "/dake/Interface.aspx", token)
+	strslice = append(strslice, reqId, timeStamp, nonce, mchId, method)
+	strslice = append(strslice, string(data))
+	sort.Strings(strslice)
+
+	netStr := strings.Join(strslice, ",")
+	fmt.Println(netStr)
+	reqData.Data = string(data)
+	reqData.Method = method
+	reqData.Time = timeStamp
+	reqData.ReqId = reqId
+	reqData.Nonce = nonce
+	reqData.MchId = mchId
+	reqData.Token = token
+	reqData.Sign = MD5(netStr)
+
+	fmt.Println(reqData)
+	request_info, errs := json.Marshal(reqData)
+	if errs != nil {
+		fmt.Println(errs.Error())
+	}
+
+	fmt.Println(string(request_info))
+	reqBody := bytes.NewBuffer(request_info)
+	resp, err := http.Post(imdosUrl, "json", reqBody)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	var ret imdosRsp
+	err = json.NewDecoder(resp.Body).Decode(&ret)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	if ret.Code != "200" {
+
+	}
+	fmt.Println(ret.Code, ret.Msg)
+	return true, "OK"
 }
 
 // validateAuth is used to validate the authentication and returns the

@@ -13,12 +13,11 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
-
 	rice "github.com/GeertJohan/go.rice"
 	"github.com/hacdias/fileutils"
 	"github.com/mholt/caddy"
 	"github.com/robfig/cron"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -39,6 +38,7 @@ var (
 	ErrWrongDataType      = errors.New("wrong data type")
 	ErrInvalidUpdateField = errors.New("invalid field to update")
 	ErrInvalidOption      = errors.New("invalid option")
+	ErrInvalidUserId      = errors.New("invalid userid")
 )
 
 // ReCaptcha settings.

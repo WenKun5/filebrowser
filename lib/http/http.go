@@ -88,6 +88,7 @@ func serve(c *fb.Context, w http.ResponseWriter, r *http.Request) (int, error) {
 	w.Header().Set("x-frame-options", "SAMEORIGIN")
 	w.Header().Set("x-content-type-options", "nosniff")
 	w.Header().Set("x-xss-protection", "1; mode=block")
+	w.Header().Set("x-xss-protection", "1; mode=block")
 
 	return renderFile(c, w, "index.html")
 }
