@@ -66,9 +66,14 @@ func sharePostHandler(c *fb.Context, w http.ResponseWriter, r *http.Request) (in
 	if err != nil {
 		return http.StatusNotFound, err
 	}
-	// Tries to get the file type.
-	if err = f.GetFileType(true); err != nil {
-		return ErrorToHTTP(err, true), err
+
+	if !f.IsDir {
+		// Tries to get the file type.
+		if err = f.GetFileType(true); err != nil {
+			return ErrorToHTTP(err, true), err
+		}
+	} else {
+		f.Type = "directory"
 	}
 
 	var s *fb.ShareLink
