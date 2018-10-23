@@ -186,6 +186,13 @@ func resourcePostPutHandler(c *fb.Context, w http.ResponseWriter, r *http.Reques
 		return ErrorToHTTP(err, false), err
 	}
 
+	// Add by wenkun
+	file, _, err := r.FormFile("file")
+	defer file.Close()
+	if err != nil {
+		return ErrorToHTTP(err, false), err
+	}
+	
 	// If using POST method, we are trying to create a new file so it is not
 	// desirable to override an already existent file. Thus, we check
 	// if the file already exists. If so, we just return a 409 Conflict.
@@ -208,7 +215,9 @@ func resourcePostPutHandler(c *fb.Context, w http.ResponseWriter, r *http.Reques
 	defer f.Close()
 
 	// Copies the new content for the file.
-	_, err = io.Copy(f, r.Body)
+	// add by wenkun, Surpport by wenkun.
+	//_, err = io.Copy(f, r.Body)
+	_, err = io.Copy(f, file)
 	if err != nil {
 		return ErrorToHTTP(err, false), err
 	}

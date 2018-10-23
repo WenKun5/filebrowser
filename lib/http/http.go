@@ -68,6 +68,9 @@ func serve(c *fb.Context, w http.ResponseWriter, r *http.Request) (int, error) {
 	// Checks if this request is made to the API and directs to the
 	// API handler if so.
 	if matchURL(r.URL.Path, "/api") {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, PATCH")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, Action, Destination, Authorization")
 		r.URL.Path = strings.TrimPrefix(r.URL.Path, "/api")
 		return apiHandler(c, w, r)
 	}
@@ -105,6 +108,10 @@ func staticHandler(c *fb.Context, w http.ResponseWriter, r *http.Request) (int, 
 
 // apiHandler is the main entry point for the /api endpoint.
 func apiHandler(c *fb.Context, w http.ResponseWriter, r *http.Request) (int, error) {
+	if r.Method == "OPTIONS" {
+		return http.StatusAccepted, nil
+	}
+
 	if r.URL.Path == "/auth/get" {
 		return authHandler(c, w, r)
 	}

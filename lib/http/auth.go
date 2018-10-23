@@ -229,7 +229,6 @@ func checkUserId(UserId string) bool {
 	}
 	userIdStr := strings.Replace(string(userId), "\n", "", -1)
 	if userIdStr != UserId {
-		fmt.Printf("userId does not match, %s, %s", userIdStr, UserId)
 		return false
 	}
 	return true
@@ -246,10 +245,15 @@ func validateAuthByUserId(c *fb.Context, UserId string) (bool, *fb.User) {
 	if err == nil {
 		return true, user
 	}
+	// If UserId is not in data base
+	user, err = c.Store.Users.GetByUsername("admin", c.NewFS)
+	if err != nil {
+		return false, nil
+	}
 
 	// Can not find userId in database, Create an DefaultUser in database
-	var u fb.User
-	u = fb.DefaultUser
+	//var u fb.User
+	u := fb.DefaultUser
 	u.Username = UserId
 
 	// Hashes the password.
@@ -265,13 +269,14 @@ func validateAuthByUserId(c *fb.Context, UserId string) (bool, *fb.User) {
 	u.AllowNew = true
 	u.AllowEdit = true
 	u.AllowPublish = true
+	u.Scope = user.Scope
+	u.FileSystem = user.FileSystem
 
 	// Saves the user to the database.
 	if err := c.Store.Users.Save(&u); err != nil {
 		fmt.Println(err.Error())
 		return false, nil
 	}
-
 	return true, &u
 }
 
