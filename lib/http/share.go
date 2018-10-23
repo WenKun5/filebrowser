@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/base64"
+	"fmt"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -28,7 +29,15 @@ func shareHandler(c *fb.Context, w http.ResponseWriter, r *http.Request) (int, e
 
 func shareGetHandler(c *fb.Context, w http.ResponseWriter, r *http.Request) (int, error) {
 	path := filepath.Join(c.User.Scope, r.URL.Path)
-	s, err := c.Store.Share.GetByPath(path)
+
+	//Add by wenkun, If URL Path is "/", then return all available links.
+	fmt.Printf("Request URL:%s", r.URL.Path)
+	if r.URL.Path == "/" {
+		s, err := c.Store.Share.Gets()
+	} else {
+		s, err := c.Store.Share.GetByPath(path)
+	}
+
 	if err == fb.ErrNotExist {
 		return http.StatusNotFound, nil
 	}
