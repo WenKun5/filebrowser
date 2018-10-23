@@ -13,12 +13,11 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
-
 	rice "github.com/GeertJohan/go.rice"
 	"github.com/hacdias/fileutils"
 	"github.com/mholt/caddy"
 	"github.com/robfig/cron"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const (
@@ -478,6 +477,8 @@ func (r *Regexp) MatchString(s string) bool {
 type ShareLink struct {
 	Hash       string    `json:"hash" storm:"id,index"`
 	Path       string    `json:"path" storm:"index"`
+	Name       string    `json:"name"`
+	Type       string    `json:"type"`
 	Expires    bool      `json:"expires"`
 	ExpireDate time.Time `json:"expireDate"`
 }

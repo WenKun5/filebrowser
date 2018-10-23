@@ -2,7 +2,6 @@ package http
 
 import (
 	"encoding/base64"
-	"fmt"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -29,13 +28,13 @@ func shareHandler(c *fb.Context, w http.ResponseWriter, r *http.Request) (int, e
 
 func shareGetHandler(c *fb.Context, w http.ResponseWriter, r *http.Request) (int, error) {
 	path := filepath.Join(c.User.Scope, r.URL.Path)
-
+	var s []*fb.ShareLink
+	var err error
 	//Add by wenkun, If URL Path is "/", then return all available links.
-	fmt.Printf("Request URL:%s", r.URL.Path)
 	if r.URL.Path == "/" {
-		s, err := c.Store.Share.Gets()
+		s, err = c.Store.Share.Gets()
 	} else {
-		s, err := c.Store.Share.GetByPath(path)
+		s, err = c.Store.Share.GetByPath(path)
 	}
 
 	if err == fb.ErrNotExist {
@@ -63,6 +62,15 @@ func shareGetHandler(c *fb.Context, w http.ResponseWriter, r *http.Request) (int
 func sharePostHandler(c *fb.Context, w http.ResponseWriter, r *http.Request) (int, error) {
 	path := filepath.Join(c.User.Scope, r.URL.Path)
 
+	f, err := fb.GetInfo(r.URL, c.FileBrowser, c.User)
+	if err != nil {
+		return http.StatusNotFound, err
+	}
+	// Tries to get the file type.
+	if err = f.GetFileType(true); err != nil {
+		return ErrorToHTTP(err, true), err
+	}
+
 	var s *fb.ShareLink
 	expire := r.URL.Query().Get("expires")
 	unit := r.URL.Query().Get("unit")
@@ -84,6 +92,8 @@ func sharePostHandler(c *fb.Context, w http.ResponseWriter, r *http.Request) (in
 	str := base64.URLEncoding.EncodeToString(bytes)
 
 	s = &fb.ShareLink{
+		Name:    f.Name,
+		Type:    f.Type,
 		Path:    path,
 		Hash:    str,
 		Expires: expire != "",
