@@ -165,7 +165,12 @@ func (i *File) GetListing(u *User, r *http.Request) error {
 			Path:        filepath.Join(i.Path, name),
 		}
 
-		i.GetFileType(false)
+		if !i.IsDir {
+			i.GetFileType(false)
+		} else {
+			i.Type = "directory"
+		}
+
 		fileinfos = append(fileinfos, i)
 	}
 
@@ -276,7 +281,7 @@ End:
 			}
 		}
 
-	//	i.Content = string(content)
+		//	i.Content = string(content)
 	}
 
 	return nil

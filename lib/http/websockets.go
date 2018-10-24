@@ -16,6 +16,17 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type SearchFile struct {
+	Name        string    `json:"name"`
+	Size        int64     `json:"size"`
+	Extension   string    `json:"extension"`
+	ModTime     time.Time `json:"modified"`
+	IsDir       bool      `json:"isDir"`
+	Path        string    `json:"path"`
+	VirtualPath string    `json:"virtualPath"`
+	Type        string    `json:"type"`
+}
+
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
@@ -343,4 +354,140 @@ func search(c *fb.Context, w http.ResponseWriter, r *http.Request) (int, error) 
 	}
 
 	return 0, nil
+}
+
+func newParseSearch(types string, value string) *searchOptions {
+	opts := &searchOptions{
+		CaseSensitive: false,
+		Conditions:    []condition{},
+		Terms:         []string{},
+	}
+
+	// removes the options from the value
+	if types != "" {
+		switch types {
+		case "image":
+			opts.Conditions = append(opts.Conditions, imageCondition)
+		case "audio", "music":
+			opts.Conditions = append(opts.Conditions, audioCondition)
+		case "video":
+			opts.Conditions = append(opts.Conditions, videoCondition)
+		default:
+			opts.Conditions = append(opts.Conditions, extensionCondition(types))
+		}
+	}
+
+	// If it's canse insensitive, put everything in lowercase.
+	if !opts.CaseSensitive {
+		value = strings.ToLower(value)
+	}
+
+	// Remove the spaces from the search value.
+	value = strings.TrimSpace(value)
+
+	if value == "" {
+		return opts
+	}
+
+	// if the value starts with " and finishes what that character, we will
+	// only search for that term
+	if value[0] == '"' && value[len(value)-1] == '"' {
+		unique := strings.TrimPrefix(value, "\"")
+		unique = strings.TrimSuffix(unique, "\"")
+
+		opts.Terms = []string{unique}
+		return opts
+	}
+
+	opts.Terms = strings.Split(value, " ")
+	return opts
+}
+
+func searchGetHandler(c *fb.Context, w http.ResponseWriter, r *http.Request) (int, error) {
+	var (
+		search    *searchOptions
+		fileinfos []*SearchFile
+	)
+
+	types := r.URL.Query().Get("type")
+	content := r.URL.Query().Get("content")
+
+	search = newParseSearch(types, content)
+	scope := strings.TrimPrefix(r.URL.Path, "/")
+	scope = "/" + scope
+	scope = c.User.Scope + scope
+	scope = strings.Replace(scope, "\\", "/", -1)
+	scope = filepath.Clean(scope)
+
+	err := filepath.Walk(scope, func(path string, f os.FileInfo, err error) error {
+		var (
+			originalPath string
+		)
+
+		path = strings.TrimPrefix(path, scope)
+		path = strings.TrimPrefix(path, "/")
+		path = strings.Replace(path, "\\", "/", -1)
+
+		originalPath = path
+
+		if !search.CaseSensitive {
+			path = strings.ToLower(path)
+		}
+
+		// Only execute if there are conditions to meet.
+		if len(search.Conditions) > 0 {
+			match := false
+
+			for _, t := range search.Conditions {
+				if t(path) {
+					match = true
+					break
+				}
+			}
+
+			// If doesn't meet the condition, go to the next.
+			if !match {
+				return nil
+			}
+		}
+
+		if len(search.Terms) > 0 {
+			is := false
+
+			// Checks if matches the terms and if it is allowed.
+			for _, term := range search.Terms {
+				if is {
+					break
+				}
+
+				if strings.Contains(path, term) {
+					if !c.User.Allowed(path) {
+						return nil
+					}
+
+					is = true
+				}
+			}
+
+			if !is {
+				return nil
+			}
+		}
+
+		i := &SearchFile{
+			Name:    f.Name(),
+			Size:    f.Size(),
+			ModTime: f.ModTime(),
+			IsDir:   f.IsDir(),
+			Path:    originalPath,
+		}
+		fileinfos = append(fileinfos, i)
+		return nil
+	})
+
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	return renderJSON(w, fileinfos)
 }

@@ -164,7 +164,8 @@ func apiHandler(c *fb.Context, w http.ResponseWriter, r *http.Request) (int, err
 	case "command":
 		code, err = command(c, w, r)
 	case "search":
-		code, err = search(c, w, r)
+		//code, err = search(c, w, r)
+		code, err = searchGetHandler(c, w, r)
 	case "resource":
 		code, err = resourceHandler(c, w, r)
 	case "users":

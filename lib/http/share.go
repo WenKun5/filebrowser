@@ -97,11 +97,12 @@ func sharePostHandler(c *fb.Context, w http.ResponseWriter, r *http.Request) (in
 	str := base64.URLEncoding.EncodeToString(bytes)
 
 	s = &fb.ShareLink{
-		Name:    f.Name,
-		Type:    f.Type,
-		Path:    path,
-		Hash:    str,
-		Expires: expire != "",
+		Name:        f.Name,
+		Type:        f.Type,
+		Path:        path,
+		Hash:        str,
+		Expires:     expire != "",
+		CreatedTime: time.Now(),
 	}
 
 	if expire != "" {

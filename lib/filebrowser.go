@@ -475,12 +475,13 @@ func (r *Regexp) MatchString(s string) bool {
 
 // ShareLink is the information needed to build a shareable link.
 type ShareLink struct {
-	Hash       string    `json:"hash" storm:"id,index"`
-	Path       string    `json:"path" storm:"index"`
-	Name       string    `json:"name"`
-	Type       string    `json:"type"`
-	Expires    bool      `json:"expires"`
-	ExpireDate time.Time `json:"expireDate"`
+	Hash        string    `json:"hash" storm:"id,index"`
+	Path        string    `json:"path" storm:"index"`
+	Name        string    `json:"name"`
+	Type        string    `json:"type"`
+	Expires     bool      `json:"expires"`
+	CreatedTime time.Time `json:"createTime"`
+	ExpireDate  time.Time `json:"expireDate"`
 }
 
 // Store is a collection of the stores needed to get
