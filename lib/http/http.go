@@ -296,18 +296,24 @@ func sharePage(c *fb.Context, w http.ResponseWriter, r *http.Request) (int, erro
 	dl := r.URL.Query().Get("dl")
 
 	if dl == "" || dl == "0" {
-		tpl := template.Must(template.New("file").Parse(c.Assets.MustString("static/share/index.html")))
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		/*
+			tpl := template.Must(template.New("file").Parse(c.Assets.MustString("static/share/index.html")))
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
-		err := tpl.Execute(w, map[string]interface{}{
+			err := tpl.Execute(w, map[string]interface{}{
+				"baseurl": c.RootURL(),
+				"File":    c.File,
+			})
+		*/
+		response, err := json.Marshal(map[string]interface{}{
 			"baseurl": c.RootURL(),
-			"File":    c.File,
+			"file":    c.File,
 		})
 
 		if err != nil {
 			return http.StatusInternalServerError, err
 		}
-		return 0, nil
+		return renderJSON(w, response)
 	}
 
 	return downloadHandler(c, w, r)
