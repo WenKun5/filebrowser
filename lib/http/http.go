@@ -304,15 +304,18 @@ func sharePage(c *fb.Context, w http.ResponseWriter, r *http.Request) (int, erro
 				"baseurl": c.RootURL(),
 				"File":    c.File,
 			})
+
+			if err != nil {
+			return http.StatusInternalServerError, err
+			}
+
 		*/
-		response, err := json.Marshal(map[string]interface{}{
+
+		response := map[string]interface{}{
 			"baseurl": c.RootURL(),
 			"file":    c.File,
-		})
-
-		if err != nil {
-			return http.StatusInternalServerError, err
 		}
+
 		return renderJSON(w, response)
 	}
 

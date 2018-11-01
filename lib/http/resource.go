@@ -192,7 +192,7 @@ func resourcePostPutHandler(c *fb.Context, w http.ResponseWriter, r *http.Reques
 	if err != nil {
 		return ErrorToHTTP(err, false), err
 	}
-	
+
 	// If using POST method, we are trying to create a new file so it is not
 	// desirable to override an already existent file. Thus, we check
 	// if the file already exists. If so, we just return a 409 Conflict.
@@ -314,40 +314,102 @@ func resourcePatchHandler(c *fb.Context, w http.ResponseWriter, r *http.Request)
 		return ErrorToHTTP(err, true), err
 	}
 
-	src := r.URL.Path
+	/*
+		src := r.URL.Path
 
-	if dst == "/" || src == "/" {
-		return http.StatusForbidden, nil
-	}
-
-	if action == "copy" {
-		// Fire the after trigger.
-		if err := c.Runner("before_copy", src, dst, c.User); err != nil {
-			return http.StatusInternalServerError, err
+		if dst == "/" || src == "/" {
+			return http.StatusForbidden, nil
 		}
+	*/
+	files := []string{}
+	names := strings.Split(r.URL.Query().Get("files"), ",")
 
-		// Copy the file.
-		err = c.User.FileSystem.Copy(src, dst)
+	// If there are files in the query, sanitize their names.
+	// Otherwise, just append the current path.
+	if len(names) != 0 {
+		for _, name := range names {
+			// Unescape the name.
+			name, err := url.QueryUnescape(name)
+			if err != nil {
+				return http.StatusInternalServerError, err
+			}
 
-		// Fire the after trigger.
-		if err := c.Runner("after_copy", src, dst, c.User); err != nil {
-			return http.StatusInternalServerError, err
+			// Clean the slashes.
+			name = fileutils.SlashClean(name)
+			files = append(files, filepath.Join(c.File.Path, name))
 		}
 	} else {
+		files = append(files, c.File.Path)
+	}
+
+	fmt.Printf("%v\n", files)
+
+	opt := func(action, src, dst string, f func(string, string) error) (int, error) {
+		beforeAction := fmt.Sprintf("before_%s", action)
+		afterAction := fmt.Sprintf("after_%s", action)
+
 		// Fire the after trigger.
-		if err := c.Runner("before_rename", src, dst, c.User); err != nil {
+		if err := c.Runner(beforeAction, src, dst, c.User); err != nil {
 			return http.StatusInternalServerError, err
 		}
 
-		// Rename the file.
-		err = c.User.FileSystem.Rename(src, dst)
+		// Copy or Rename opration the file.
+		err = f(src, dst)
 
 		// Fire the after trigger.
-		if err := c.Runner("after_rename", src, dst, c.User); err != nil {
+		if err := c.Runner(afterAction, src, dst, c.User); err != nil {
 			return http.StatusInternalServerError, err
+		}
+		return ErrorToHTTP(err, true), err
+	}
+
+	var doFunc func(string, string) error
+	if action == "copy" {
+		doFunc = c.User.FileSystem.Copy
+	} else {
+		doFunc = c.User.FileSystem.Rename
+	}
+
+	for _, file := range files {
+		src := file
+		if dst == "/" || src == "/" {
+			return http.StatusForbidden, nil
+		}
+		code, err := opt(action, src, dst, doFunc)
+		if err != nil {
+			return code, err
 		}
 	}
 
+	/*
+		if action == "copy" {
+			// Fire the after trigger.
+			if err := c.Runner("before_copy", src, dst, c.User); err != nil {
+				return http.StatusInternalServerError, err
+			}
+
+			// Copy the file.
+			err = c.User.FileSystem.Copy(src, dst)
+
+			// Fire the after trigger.
+			if err := c.Runner("after_copy", src, dst, c.User); err != nil {
+				return http.StatusInternalServerError, err
+			}
+		} else {
+			// Fire the after trigger.
+			if err := c.Runner("before_rename", src, dst, c.User); err != nil {
+				return http.StatusInternalServerError, err
+			}
+
+			// Rename the file.
+			err = c.User.FileSystem.Rename(src, dst)
+
+			// Fire the after trigger.
+			if err := c.Runner("after_rename", src, dst, c.User); err != nil {
+				return http.StatusInternalServerError, err
+			}
+		}
+	*/
 	return ErrorToHTTP(err, true), err
 }
 
